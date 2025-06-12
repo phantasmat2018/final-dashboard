@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const weatherSoundToggle = document.getElementById('weather-sound-toggle');
     const alertSoundToggle = document.getElementById('alert-sound-toggle');
     const kyivStatusEl = document.getElementById('kyiv-status');
-    // НОВИЙ ЕЛЕМЕНТ
     const footerAlertList = document.getElementById('footer-alert-list');
 
     // Змінні стану
@@ -83,19 +82,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (alertSoundEnabled) sounds.alertEnd.play();
             }
 
-            // --- НОВА ЛОГІКА: Оновлення нижнього блоку тривог ---
-            const otherRegions = allAlerts.filter(alert => alert.location_title !== 'м. Київ');
+            // --- ОНОВЛЕНА ЛОГІКА: Усунення дублікатів ---
+            const otherRegionsAlerts = allAlerts.filter(alert => alert.location_title !== 'м. Київ');
             footerAlertList.innerHTML = ''; // Очищуємо попередній список
 
-            if (otherRegions.length > 0) {
+            if (otherRegionsAlerts.length > 0) {
+                // Створюємо масив тільки з назв локацій
+                const locationNames = otherRegionsAlerts.map(alert => alert.location_title);
+                // Створюємо унікальний набір назв за допомогою Set, а потім перетворюємо його назад в масив
+                const uniqueLocationNames = [...new Set(locationNames)];
+
                 const title = document.createElement('h4');
                 title.textContent = 'Тривога в інших областях:';
                 footerAlertList.appendChild(title);
 
-                otherRegions.forEach(alert => {
+                uniqueLocationNames.forEach(locationName => {
                     const badge = document.createElement('div');
                     badge.className = 'alert-badge';
-                    badge.textContent = alert.location_title;
+                    badge.textContent = locationName;
                     footerAlertList.appendChild(badge);
                 });
                 footerAlertList.style.display = 'flex'; // Показуємо блок, якщо є тривоги
@@ -107,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Failed to load alert status:", error);
             kyivStatusEl.textContent = 'Помилка завантаження';
             kyivStatusEl.className = 'alert-status';
-            footerAlertList.innerHTML = ''; // Очищуємо також при помилці
+            footerAlertList.innerHTML = '';
             footerAlertList.style.display = 'none';
         }
     }
