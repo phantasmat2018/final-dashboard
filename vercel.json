@@ -6,13 +6,6 @@
       "use": "@vercel/node"
     },
     {
-      "src": "api/news.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxDuration": 30
-      }
-    },
-    {
       "src": "index.html",
       "use": "@vercel/static"
     },
@@ -33,10 +26,6 @@
     {
       "src": "/api/alerts",
       "dest": "/api/alerts.js"
-    },
-    {
-      "src": "/api/news",
-      "dest": "/api/news.js"
     },
     {
       "src": "/sounds/(.*)",
