@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const kyivStatusEl = document.getElementById('kyiv-status');
     const footerAlertList = document.getElementById('footer-alert-list');
     const weatherNotificationTypeToggle = document.getElementById('weather-notification-type-toggle');
-    const newsContentEl = document.getElementById('news-content'); // Новий елемент
+    const newsContentEl = document.getElementById('news-content');
+    const refreshNewsBtn = document.getElementById('refresh-news-btn');
 
     // --- ЗМІННІ СТАНУ ---
     let lastTemperature = null;
@@ -43,25 +44,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- API ---
     const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=50.462722&longitude=30.491602&current_weather=true';
     const alertsApiUrl = '/api/alerts'; 
-    const newsApiUrl = '/api/news'; // Новий API
+    const newsApiUrl = '/api/news';
 
     //============================================
     // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ
     //============================================
     function speak(text) {
         if (!weatherSoundEnabled || !window.speechSynthesis) return;
-
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
-        
         if (englishVoice) {
             utterance.voice = englishVoice;
         }
-        
         utterance.rate = 1;
         utterance.pitch = 1;
-
         window.speechSynthesis.speak(utterance);
     }
 
@@ -93,21 +90,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //============================================
-    // БЛОК НОВИН (НОВА ФУНКЦІЯ)
+    // БЛОК НОВИН
     //============================================
     async function fetchNews() {
+        refreshNewsBtn.classList.add('loading');
         try {
             const response = await fetch(newsApiUrl);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
-            newsContentEl.innerHTML = ''; // Очищуємо старі новини
+            newsContentEl.innerHTML = ''; 
 
             data.items.forEach(item => {
                 const newsLink = document.createElement('a');
                 newsLink.className = 'news-item';
                 newsLink.href = item.link;
-                newsLink.target = '_blank'; // Відкривати в новій вкладці
+                newsLink.target = '_blank';
                 newsLink.rel = 'noopener noreferrer';
 
                 const newsTitle = document.createElement('div');
@@ -116,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const newsSnippet = document.createElement('div');
                 newsSnippet.className = 'news-snippet';
-                // Обрізаємо опис до 100 символів
                 newsSnippet.textContent = item.contentSnippet?.substring(0, 100) + '...';
 
                 newsLink.appendChild(newsTitle);
@@ -126,6 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Failed to fetch news:", error);
             newsContentEl.innerHTML = '<p>Не вдалося завантажити новини.</p>';
+        } finally {
+            setTimeout(() => {
+                refreshNewsBtn.classList.remove('loading');
+            }, 500);
         }
     }
 
@@ -227,13 +228,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('dark-theme', themeToggle.checked);
     });
 
+    refreshNewsBtn.addEventListener('click', fetchNews);
+
     // --- ПЕРШИЙ ЗАПУСК ТА ІНТЕРВАЛИ ---
     fetchWeather();
     updateTime();
     fetchAlerts();
-    fetchNews(); // Перший запуск новин
+    fetchNews();
     setInterval(fetchWeather, 60 * 1000);
     setInterval(updateTime, 1000);
     setInterval(fetchAlerts, 10 * 1000);
-    setInterval(fetchNews, 15 * 60 * 1000); // Оновлювати новини кожні 15 хвилин
+    setInterval(fetchNews, 15 * 60 * 1000);
 });
