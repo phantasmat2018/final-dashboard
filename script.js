@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let alertSoundEnabled = true;
 
     // --- ЗМІННІ ДЛЯ МОНІТОРИНГУ АУДІОСИГНАЛУ ---
+    let isMonitorInitialized = false; // Новий прапорець, що показує, чи ініціалізовано моніторинг
     let isMonitoringEnabled = true;
     let isStreamSoundEnabled = false;
     let isChannelAlertSoundEnabled = true;
@@ -48,77 +49,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const channelStreamUrl = 'https://ext.cdn.nashnet.tv/228.0.0.15/index.m3u8';
 
     //============================================
-    // БЛОК ПОГОДИ
+    // СТАРІ БЛОКИ (без змін)
     //============================================
-    async function fetchWeather() {
-        try {
-            const response = await fetch(weatherApiUrl);
-            if (!response.ok) throw new Error(`Weather HTTP error! Status: ${response.status}`);
-            const data = await response.json();
-            const currentTemp = Math.round(data.current_weather.temperature);
-            temperatureEl.textContent = currentTemp;
-            if (lastTemperature !== null && lastTemperature !== currentTemp && weatherSoundEnabled) {
-                sounds.tempChange.play();
-            }
-            lastTemperature = currentTemp;
-        } catch (error) {
-            console.error("Failed to fetch weather:", error);
-            temperatureEl.textContent = 'XX';
-        }
-    }
+    async function fetchWeather() { try { const response = await fetch(weatherApiUrl); if (!response.ok) throw new Error(`Weather HTTP error! Status: ${response.status}`); const data = await response.json(); const currentTemp = Math.round(data.current_weather.temperature); temperatureEl.textContent = currentTemp; if (lastTemperature !== null && lastTemperature !== currentTemp && weatherSoundEnabled) { sounds.tempChange.play(); } lastTemperature = currentTemp; } catch (error) { console.error("Failed to fetch weather:", error); temperatureEl.textContent = 'XX'; } }
+    function updateTime() { const now = new Date(); const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' }; const optionsWeekday = { weekday: 'long' }; timeEl.textContent = now.toLocaleTimeString('uk-UA'); dateEl.textContent = now.toLocaleDateString('uk-UA', optionsDate); let weekday = now.toLocaleDateString('uk-UA', optionsWeekday); weekdayEl.textContent = weekday.charAt(0).toUpperCase() + weekday.slice(1); }
+    async function fetchAlerts() { try { const response = await fetch(alertsApiUrl); if (!response.ok) throw new Error('Failed to fetch from API proxy'); const data = await response.json(); const allAlerts = data.alerts; const kyivAlertNow = allAlerts.some(alert => alert.location_title === 'м. Київ'); if (kyivAlertNow) { kyivStatusEl.textContent = 'м. Київ: ПОВІТРЯНА ТРИВОГА'; kyivStatusEl.className = 'alert-status status-active'; } else { kyivStatusEl.textContent = 'м. Київ: Немає тривоги'; kyivStatusEl.className = 'alert-status status-inactive'; } if (kyivAlertNow && !isKyivAlertActive) { isKyivAlertActive = true; if (alertSoundEnabled) sounds.alertStart.play(); } else if (!kyivAlertNow && isKyivAlertActive) { isKyivAlertActive = false; if (alertSoundEnabled) sounds.alertEnd.play(); } } catch (error) { console.error("Failed to load alert status:", error); kyivStatusEl.textContent = 'Помилка завантаження'; kyivStatusEl.className = 'alert-status'; } }
 
     //============================================
-    // БЛОК ЧАСУ
+    // НОВИЙ БЛОК: МОНІТОРИНГ АУДІОСИГНАЛУ
     //============================================
-    function updateTime() {
-        const now = new Date();
-        const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
-        const optionsWeekday = { weekday: 'long' };
-        timeEl.textContent = now.toLocaleTimeString('uk-UA');
-        dateEl.textContent = now.toLocaleDateString('uk-UA', optionsDate);
-        let weekday = now.toLocaleDateString('uk-UA', optionsWeekday);
-        weekdayEl.textContent = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-    }
-
-    //============================================
-    // БЛОК ТРИВОГ
-    //============================================
-    async function fetchAlerts() {
-        try {
-            const response = await fetch(alertsApiUrl);
-            if (!response.ok) throw new Error('Failed to fetch from API proxy');
-            
-            const data = await response.json();
-            const allAlerts = data.alerts;
-            const kyivAlertNow = allAlerts.some(alert => alert.location_title === 'м. Київ');
-
-            if (kyivAlertNow) {
-                kyivStatusEl.textContent = 'м. Київ: ПОВІТРЯНА ТРИВОГА';
-                kyivStatusEl.className = 'alert-status status-active';
-            } else {
-                kyivStatusEl.textContent = 'м. Київ: Немає тривоги';
-                kyivStatusEl.className = 'alert-status status-inactive';
-            }
-            
-            if (kyivAlertNow && !isKyivAlertActive) {
-                isKyivAlertActive = true;
-                if (alertSoundEnabled) sounds.alertStart.play();
-            } else if (!kyivAlertNow && isKyivAlertActive) {
-                isKyivAlertActive = false;
-                if (alertSoundEnabled) sounds.alertEnd.play();
-            }
-        } catch (error) {
-            console.error("Failed to load alert status:", error);
-            kyivStatusEl.textContent = 'Помилка завантаження';
-            kyivStatusEl.className = 'alert-status';
-        }
-    }
     
-    //============================================
-    // БЛОК МОНІТОРИНГУ АУДІОСИГНАЛУ
-    //============================================
-    function initAudioContext() {
-        if (audioContext) return; // Ініціалізуємо тільки один раз
+    // Ця функція тепер запускається лише один раз після першого кліку
+    function initializeAudioMonitoring() {
+        if (isMonitorInitialized) return; // Захист від повторної ініціалізації
+        isMonitorInitialized = true;
+
+        console.log("Ініціалізація аудіо моніторингу...");
 
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -131,10 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
             analyser.connect(audioContext.destination);
         } catch (e) {
             console.error("Web Audio API не вдалося ініціалізувати:", e);
+            channelStatus.textContent = "Помилка аудіо";
+            return;
         }
-    }
 
-    function setupChannelMonitor() {
         if (Hls.isSupported()) {
             const hls = new Hls();
             hls.loadSource(channelStreamUrl);
@@ -148,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
             channelVideo.muted = !isStreamSoundEnabled;
             channelVideo.play().catch(e => console.error("Відтворення потоку заблоковано:", e));
         }
-
+        
         startMonitoringLoop();
     }
 
@@ -169,25 +115,28 @@ document.addEventListener('DOMContentLoaded', () => {
         analyser.getByteTimeDomainData(dataArray);
         const volume = getAverageVolume(dataArray);
 
-        if (volume > SILENCE_THRESHOLD) {
-            if (silenceStartTime !== null) {
-                sounds.channelAlert.pause();
-                channelStatus.textContent = 'Потік активний';
-                channelStatus.classList.remove('status-error');
-                channelStatus.classList.add('status-ok');
-            }
-            silenceStartTime = null;
-        } else {
-            if (silenceStartTime === null) {
-                silenceStartTime = Date.now();
+        // Цей 'if' тепер спрацює, оскільки відео відтворюється
+        if (channelVideo.paused === false && !channelVideo.seeking) {
+             if (volume > SILENCE_THRESHOLD) {
+                if (silenceStartTime !== null) {
+                    sounds.channelAlert.pause();
+                    channelStatus.textContent = 'Потік активний';
+                    channelStatus.classList.remove('status-error');
+                    channelStatus.classList.add('status-ok');
+                }
+                silenceStartTime = null;
             } else {
-                const silenceDuration = Date.now() - silenceStartTime;
-                if (silenceDuration > SILENCE_TIMEOUT_MS) {
-                    channelStatus.textContent = 'ВІДСУТНІЙ ЗВУК!';
-                    channelStatus.classList.add('status-error');
-                    channelStatus.classList.remove('status-ok');
-                    if (isChannelAlertSoundEnabled) {
-                        sounds.channelAlert.play();
+                if (silenceStartTime === null) {
+                    silenceStartTime = Date.now();
+                } else {
+                    const silenceDuration = Date.now() - silenceStartTime;
+                    if (silenceDuration > SILENCE_TIMEOUT_MS) {
+                        channelStatus.textContent = 'ВІДСУТНІЙ ЗВУК!';
+                        channelStatus.classList.add('status-error');
+                        channelStatus.classList.remove('status-ok');
+                        if (isChannelAlertSoundEnabled) {
+                            sounds.channelAlert.play();
+                        }
                     }
                 }
             }
@@ -210,19 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- ОБРОБНИКИ ПОДІЙ ---
-    weatherSoundToggle.addEventListener('click', () => {
-        weatherSoundEnabled = !weatherSoundEnabled;
-        weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
-    });
-    alertSoundToggle.addEventListener('click', () => {
-        alertSoundEnabled = !alertSoundEnabled;
-        alertSoundToggle.textContent = alertSoundEnabled ? '🔔 Тривога: Увімкнено' : '🔕 Тривога: Вимкнено';
-    });
-    themeToggle.addEventListener('change', () => {
-        document.body.classList.toggle('dark-theme', themeToggle.checked);
-    });
+    weatherSoundToggle.addEventListener('click', () => { weatherSoundEnabled = !weatherSoundEnabled; weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено'; });
+    alertSoundToggle.addEventListener('click', () => { alertSoundEnabled = !alertSoundEnabled; alertSoundToggle.textContent = alertSoundEnabled ? '🔔 Тривога: Увімкнено' : '🔕 Тривога: Вимкнено'; });
+    themeToggle.addEventListener('change', () => { document.body.classList.toggle('dark-theme', themeToggle.checked); });
     
     monitoringToggle.addEventListener('click', () => {
+        if (!isMonitorInitialized) initializeAudioMonitoring();
         isMonitoringEnabled = !isMonitoringEnabled;
         monitoringToggle.textContent = isMonitoringEnabled ? 'Моніторинг: Увімкнено' : 'Моніторинг: Вимкнено';
         if (!isMonitoringEnabled) {
@@ -230,20 +172,18 @@ document.addEventListener('DOMContentLoaded', () => {
             channelStatus.textContent = 'Моніторинг вимкнено';
             channelStatus.classList.remove('status-error');
             channelStatus.classList.add('status-ok');
-            stopMonitoringLoop();
-        } else {
-            initAudioContext();
-            startMonitoringLoop();
         }
     });
     
     streamSoundToggle.addEventListener('click', () => {
+        if (!isMonitorInitialized) initializeAudioMonitoring();
         isStreamSoundEnabled = !isStreamSoundEnabled;
         channelVideo.muted = !isStreamSoundEnabled;
         streamSoundToggle.textContent = isStreamSoundEnabled ? '🔊 Потік: Увімкнено' : '🔊 Потік: Вимкнено';
     });
     
     alertChannelSoundToggle.addEventListener('click', () => {
+        if (!isMonitorInitialized) initializeAudioMonitoring();
         isChannelAlertSoundEnabled = !isChannelAlertSoundEnabled;
         alertChannelSoundToggle.textContent = isChannelAlertSoundEnabled ? '🔔 Сповіщення: Увімкнено' : '🔕 Сповіщення: Вимкнено';
         if (!isChannelAlertSoundEnabled) {
@@ -255,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchWeather();
     updateTime();
     fetchAlerts();
-    setupChannelMonitor();
     
     setInterval(fetchWeather, 60 * 1000);
     setInterval(updateTime, 1000);
