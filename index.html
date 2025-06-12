@@ -24,44 +24,48 @@
 
     <div class="page-wrapper">
         <div class="main-container">
-            <div class="tile tile-weather">
-                <h3 class="tile-title">Погода в Києві</h3>
-                <div class="content">
-                    <div class="weather-temp">
-                        <span id="temperature">--</span>°C
+            <div class="column column-left">
+                <div class="tile tile-weather">
+                    <h3 class="tile-title">ПОГОДА В КИЄВІ</h3>
+                    <div class="content">
+                        <div class="weather-temp"><span id="temperature">--</span>°C</div>
+                    </div>
+                    <div class="tile-footer">
+                        <button id="weather-sound-toggle" class="sound-toggle">🔔 Звук: Увімкнено</button>
                     </div>
                 </div>
-                <div class="tile-footer">
-                    <button id="weather-sound-toggle" class="sound-toggle">🔔 Звук: Увімкнено</button>
+                <div class="tile tile-time">
+                    <h3 class="tile-title">ПОТОЧНИЙ ЧАС</h3>
+                    <div class="content">
+                        <div id="time" class="time-display">--:--:--</div>
+                        <div id="date" class="date-display">--.--.----</div>
+                        <div id="weekday" class="weekday-display">-------</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="tile tile-time">
-                <h3 class="tile-title">Поточний час</h3>
-                <div class="content">
-                    <div id="time" class="time-display">--:--:--</div>
-                    <div id="date" class="date-display">--.--.----</div>
-                    <div id="weekday" class="weekday-display">-------</div>
+            <div class="column column-center">
+                <div class="tile tile-map">
+                    <h3 class="tile-title">МАПА ПОВІТРЯНИХ ТРИВОГ</h3>
+                    <div class="map-container">
+                        <iframe src="https://alerts.in.ua/" frameborder="0"></iframe>
+                    </div>
+                    <div class="tile-footer alert-footer">
+                        <div id="kyiv-status" class="alert-status">Завантаження...</div>
+                        <button id="alert-sound-toggle" class="sound-toggle">🔔 Тривога: Увімкнено</button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="tile tile-map">
-                <h3 class="tile-title">Мапа Повітряних Тривог</h3>
-                <div class="map-container">
-                    <iframe src="https://alerts.in.ua/" frameborder="0"></iframe>
-                </div>
-                <div class="tile-footer alert-footer">
-                     <div id="kyiv-status" class="alert-status">
-                        Завантаження статусу...
-                    </div>
-                    <button id="alert-sound-toggle" class="sound-toggle">🔔 Тривога: Увімкнено</button>
+
+            <div class="column column-right">
+                <div class="tile tile-news">
+                    <h3 class="tile-title">СТРІЧКА НОВИН КИЄВА</h3>
+                    <div id="news-container" class="news-container">Завантаження новин...</div>
                 </div>
             </div>
         </div>
 
-        <div class="other-alerts-footer" id="footer-alert-list">
-            </div>
-
+        <div class="other-alerts-footer" id="footer-alert-list"></div>
     </div>
 
     <script src="script.js"></script>

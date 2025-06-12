@@ -1,7 +1,6 @@
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
-  // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -19,16 +18,13 @@ module.exports = async (req, res) => {
         'Authorization': `Bearer ${apiToken}`
       }
     });
-
     if (!apiResponse.ok) {
       throw new Error(`API server responded with status: ${apiResponse.status}`);
     }
-
     const data = await apiResponse.json();
     res.status(200).json(data);
-
   } catch (error) {
-    console.error('API Function Error:', error);
+    console.error('Alerts API Function Error:', error);
     res.status(500).json({ message: 'Failed to fetch data from alerts API' });
   }
 };
