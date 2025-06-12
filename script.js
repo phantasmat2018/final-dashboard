@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ
     //============================================
     function speak(text) {
+        // Функція speak тепер перевіряє лише weatherSoundEnabled.
+        // Це дозволяє викликати її для негайного відгуку.
         if (!weatherSoundEnabled || !window.speechSynthesis) return;
 
         window.speechSynthesis.cancel();
@@ -65,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //============================================
-    // БЛОК ПОГОДИ (ОНОВЛЕНО)
+    // БЛОК ПОГОДИ
     //============================================
     async function fetchWeather() {
         try {
@@ -76,13 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             temperatureEl.textContent = currentTemp;
             
-            // Перевіряємо, чи змінилася температура і чи увімкнені сповіщення про погоду
             if (lastTemperature !== null && lastTemperature !== currentTemp && weatherSoundEnabled) {
-                // Перевіряємо, який тип сповіщення обрано
                 if (weatherNotificationType === 'voice') {
                     const textToSpeak = `${currentTemp} градусів`;
                     speak(textToSpeak);
-                } else { // 'sound'
+                } else {
                     sounds.tempChange.play();
                 }
             }
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //============================================
-    // ІНШІ БЛОКИ (без змін)
+    // ІНШІ БЛОКИ
     //============================================
     function updateTime() {
         const now = new Date();
@@ -167,8 +167,24 @@ document.addEventListener('DOMContentLoaded', () => {
         weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
     });
 
+    // --> ОСЬ ТУТ ОСНОВНІ ЗМІНИ <--
     weatherNotificationTypeToggle.addEventListener('change', () => {
-        weatherNotificationType = weatherNotificationTypeToggle.checked ? 'sound' : 'voice';
+        if (weatherNotificationTypeToggle.checked) {
+            // Перемкнули на режим "звук" (🎵)
+            weatherNotificationType = 'sound';
+            // Негайно відтворюємо звук, якщо звук загалом увімкнено
+            if (weatherSoundEnabled) {
+                sounds.tempChange.play();
+            }
+        } else {
+            // Перемкнули на режим "голос" (🗣️)
+            weatherNotificationType = 'voice';
+            // Негайно озвучуємо поточну температуру, якщо є дані і звук увімкнено
+            if (weatherSoundEnabled && lastTemperature !== null) {
+                const textToSpeak = `${lastTemperature} градусів`;
+                speak(textToSpeak);
+            }
+        }
     });
 
     alertSoundToggle.addEventListener('click', () => {
