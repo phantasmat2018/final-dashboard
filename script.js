@@ -9,36 +9,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertSoundToggle = document.getElementById('alert-sound-toggle');
     const kyivStatusEl = document.getElementById('kyiv-status');
     const footerAlertList = document.getElementById('footer-alert-list');
+    const weatherNotificationTypeToggle = document.getElementById('weather-notification-type-toggle');
 
     // --- ЗМІННІ СТАНУ ---
     let lastTemperature = null;
     let isKyivAlertActive = false;
     let weatherSoundEnabled = true;
     let alertSoundEnabled = true;
+    let weatherNotificationType = 'voice'; // 'voice' (за замовчуванням) або 'sound'
 
     // --- АУДІО ---
     const sounds = {
-        // Ми більше не використовуємо tempChange, але залишимо для структури
-        // tempChange: new Audio('sounds/temp_change.mp3'),
+        tempChange: new Audio('sounds/temp_change.mp3'),
         alertStart: new Audio('sounds/alert_start.mp3'),
         alertEnd: new Audio('sounds/alert_end.mp3')
     };
     
     // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ ---
     let ukrainianVoice = null;
-    // Функція для завантаження голосів. Вони завантажуються асинхронно.
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
-        // Шукаємо жіночий голос з українською мовою
         ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA' && voice.name.includes('Female'));
-        // Якщо не знайшли жіночий, беремо будь-який український
         if (!ukrainianVoice) {
             ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA');
         }
     }
-    // Завантажуємо голоси одразу
     loadVoices();
-    // І додаємо обробник події, якщо голоси завантажаться пізніше
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
     }
@@ -51,24 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
     //============================================
     // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ
     //============================================
-
-    // НОВА ФУНКЦІЯ ОЗВУЧЕННЯ
     function speak(text) {
         if (!weatherSoundEnabled || !window.speechSynthesis) return;
 
-        // Зупиняємо попередні вимови, якщо вони є
         window.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'uk-UA';
         
-        // Якщо ми знайшли український голос, використовуємо його
         if (ukrainianVoice) {
             utterance.voice = ukrainianVoice;
         }
         
-        utterance.rate = 1; // Швидкість мови
-        utterance.pitch = 1; // Висота голосу
+        utterance.rate = 1;
+        utterance.pitch = 1;
 
         window.speechSynthesis.speak(utterance);
     }
@@ -85,12 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             temperatureEl.textContent = currentTemp;
             
-            // Перевіряємо, чи змінилася температура
-            if (lastTemperature !== null && lastTemperature !== currentTemp) {
-                // Створюємо текст для озвучення
-                const textToSpeak = `${currentTemp} градусів`;
-                // Викликаємо функцію озвучення
-                speak(textToSpeak);
+            // Перевіряємо, чи змінилася температура і чи увімкнені сповіщення про погоду
+            if (lastTemperature !== null && lastTemperature !== currentTemp && weatherSoundEnabled) {
+                // Перевіряємо, який тип сповіщення обрано
+                if (weatherNotificationType === 'voice') {
+                    const textToSpeak = `${currentTemp} градусів`;
+                    speak(textToSpeak);
+                } else { // 'sound'
+                    sounds.tempChange.play();
+                }
             }
             lastTemperature = currentTemp;
         } catch (error) {
@@ -172,10 +166,16 @@ document.addEventListener('DOMContentLoaded', () => {
         weatherSoundEnabled = !weatherSoundEnabled;
         weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
     });
+
+    weatherNotificationTypeToggle.addEventListener('change', () => {
+        weatherNotificationType = weatherNotificationTypeToggle.checked ? 'sound' : 'voice';
+    });
+
     alertSoundToggle.addEventListener('click', () => {
         alertSoundEnabled = !alertSoundEnabled;
         alertSoundToggle.textContent = alertSoundEnabled ? '🔔 Тривога: Увімкнено' : '🔕 Тривога: Вимкнено';
     });
+    
     themeToggle.addEventListener('change', () => {
         document.body.classList.toggle('dark-theme', themeToggle.checked);
     });
