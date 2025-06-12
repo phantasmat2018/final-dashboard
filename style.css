@@ -38,12 +38,13 @@ input:checked + .slider:before { transform: translateX(20px); }
     margin: 0 auto;
 }
 
-/* --- ОСНОВНИЙ КОНТЕЙНЕР (ТЕПЕР CSS GRID) --- */
+/* --- ОСНОВНИЙ КОНТЕЙНЕР (ЗМІНЕНО НА 3 КОЛОНКИ) --- */
 .main-container {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 2fr 1.5fr; /* Змінено */
     grid-template-rows: 1fr 1fr;
     gap: 20px;
+    height: 80vh; /* Задаємо висоту для кращого скролу */
 }
 
 /* --- Стилі плиток --- */
@@ -59,54 +60,74 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 
 /* --- Розміщення плиток по сітці --- */
-.tile-weather {
-    grid-column: 1;
-    grid-row: 1;
-}
-.tile-time {
-    grid-column: 1;
-    grid-row: 2;
-}
-.tile-map {
-    grid-column: 2;
-    grid-row: 1 / 3;
-}
+.tile-weather { grid-column: 1; grid-row: 1; }
+.tile-time { grid-column: 1; grid-row: 2; }
+.tile-map { grid-column: 2; grid-row: 1 / 3; }
+.tile-news { grid-column: 3; grid-row: 1 / 3; } /* Новий блок */
 
 /* Кольори плиток */
 .tile-weather { background-color: rgba(251, 194, 235, 0.2); }
 .tile-time { background-color: rgba(170, 193, 238, 0.2); }
 .tile-map { background-color: rgba(255, 255, 255, 0.15); }
+.tile-news { background-color: rgba(200, 255, 200, 0.1); } /* Новий блок */
+
 
 body.dark-theme .tile { --tile-border-color: rgba(255, 255, 255, 0.1); }
 body.dark-theme .tile-weather { background-color: rgba(251, 194, 235, 0.05); }
 body.dark-theme .tile-time { background-color: rgba(170, 193, 238, 0.05); }
 body.dark-theme .tile-map { background-color: rgba(0, 0, 0, 0.2); }
+body.dark-theme .tile-news { background-color: rgba(144, 238, 144, 0.05); } /* Новий блок */
 
 
 .tile-title { margin: 0 0 20px 0; font-size: 1.1rem; font-weight: 700; opacity: 0.7; }
-.tile .content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.tile .content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; overflow: hidden; }
 
 /* --- Вміст плиток --- */
 .weather-temp { font-size: 8rem; font-weight: 800; line-height: 1; }
 .time-display { font-size: 6rem; font-weight: 800; line-height: 1; }
 .date-display, .weekday-display { font-size: 1.5rem; opacity: 0.7; margin-top: 10px; }
 
-.map-container {
-    flex-grow: 1;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 20px;
-}
+.map-container { flex-grow: 1; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
 .map-container iframe { width: 100%; height: 100%; border: none; }
 
-/* --- Футер та кнопки --- */
-.tile-footer {
+/* --- СТИЛІ ДЛЯ БЛОКУ НОВИН --- */
+#news-content {
+    overflow-y: auto; /* Додаємо скрол */
+    text-align: left;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    padding-top: 20px;
+    flex-direction: column;
+    gap: 15px;
 }
+.news-item {
+    display: block;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.3s;
+}
+.news-item:hover {
+    background: rgba(0,0,0,0.2);
+}
+.news-title {
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+.news-snippet {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    line-height: 1.4;
+}
+body.dark-theme .news-item {
+    background: rgba(255,255,255,0.05);
+}
+body.dark-theme .news-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* --- Футер та кнопки --- */
+.tile-footer { display: flex; justify-content: center; align-items: center; gap: 20px; padding-top: 20px; }
 .alert-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding-top: 0; }
 .alert-status { flex-grow: 1; padding: 10px; border-radius: 12px; text-align: center; font-weight: 700; color: white; transition: background-color 0.5s ease; }
 .alert-status.status-active { background-color: #d9534f; }
@@ -138,9 +159,10 @@ body.dark-theme .other-alerts-footer { background-color: rgba(0, 0, 0, 0.2); }
 body.dark-theme .alert-badge { background-color: rgba(255, 255, 255, 0.1); }
 
 /* --- Адаптивність --- */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) { /* Змінено точку для кращої адаптації */
     .main-container {
         display: flex;
         flex-direction: column;
+        height: auto;
     }
 }

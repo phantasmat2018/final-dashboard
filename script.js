@@ -10,13 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const kyivStatusEl = document.getElementById('kyiv-status');
     const footerAlertList = document.getElementById('footer-alert-list');
     const weatherNotificationTypeToggle = document.getElementById('weather-notification-type-toggle');
+    const newsContentEl = document.getElementById('news-content'); // Новий елемент
 
     // --- ЗМІННІ СТАНУ ---
     let lastTemperature = null;
     let isKyivAlertActive = false;
     let weatherSoundEnabled = true;
     let alertSoundEnabled = true;
-    let weatherNotificationType = 'voice'; // 'voice' (за замовчуванням) або 'sound'
+    let weatherNotificationType = 'sound';
 
     // --- АУДІО ---
     const sounds = {
@@ -25,13 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
         alertEnd: new Audio('sounds/alert_end.mp3')
     };
     
-    // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ (ЗМІНЕНО НА АНГЛІЙСЬКУ) ---
+    // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ (АНГЛІЙСЬКА) ---
     let englishVoice = null;
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
-        // Шукаємо жіночий англійський голос
         englishVoice = voices.find(voice => voice.lang.startsWith('en-') && voice.name.includes('Female'));
-        // Якщо не знайдено, шукаємо будь-який англійський голос за замовчуванням
         if (!englishVoice) {
             englishVoice = voices.find(voice => voice.lang.startsWith('en-'));
         }
@@ -41,23 +40,23 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
-
     // --- API ---
     const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=50.462722&longitude=30.491602&current_weather=true';
     const alertsApiUrl = '/api/alerts'; 
+    const newsApiUrl = '/api/news'; // Новий API
 
     //============================================
-    // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ (ЗМІНЕНО НА АНГЛІЙСЬКУ)
+    // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ
     //============================================
     function speak(text) {
         if (!weatherSoundEnabled || !window.speechSynthesis) return;
 
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; // Встановлено англійську мову
+        utterance.lang = 'en-US';
         
         if (englishVoice) {
-            utterance.voice = englishVoice; // Використовуємо знайдений англійський голос
+            utterance.voice = englishVoice;
         }
         
         utterance.rate = 1;
@@ -67,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //============================================
-    // БЛОК ПОГОДИ (ЗМІНЕНО ТЕКСТ ОЗВУЧКИ)
+    // БЛОК ПОГОДИ
     //============================================
     async function fetchWeather() {
         try {
@@ -80,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (lastTemperature !== null && lastTemperature !== currentTemp && weatherSoundEnabled) {
                 if (weatherNotificationType === 'voice') {
-                    // Текст для озвучення змінено на англійський
                     const textToSpeak = `${currentTemp} degrees`;
                     speak(textToSpeak);
                 } else {
@@ -91,6 +89,43 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Failed to fetch weather:", error);
             temperatureEl.textContent = 'XX';
+        }
+    }
+
+    //============================================
+    // БЛОК НОВИН (НОВА ФУНКЦІЯ)
+    //============================================
+    async function fetchNews() {
+        try {
+            const response = await fetch(newsApiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+
+            newsContentEl.innerHTML = ''; // Очищуємо старі новини
+
+            data.items.forEach(item => {
+                const newsLink = document.createElement('a');
+                newsLink.className = 'news-item';
+                newsLink.href = item.link;
+                newsLink.target = '_blank'; // Відкривати в новій вкладці
+                newsLink.rel = 'noopener noreferrer';
+
+                const newsTitle = document.createElement('div');
+                newsTitle.className = 'news-title';
+                newsTitle.textContent = item.title;
+
+                const newsSnippet = document.createElement('div');
+                newsSnippet.className = 'news-snippet';
+                // Обрізаємо опис до 100 символів
+                newsSnippet.textContent = item.contentSnippet?.substring(0, 100) + '...';
+
+                newsLink.appendChild(newsTitle);
+                newsLink.appendChild(newsSnippet);
+                newsContentEl.appendChild(newsLink);
+            });
+        } catch (error) {
+            console.error("Failed to fetch news:", error);
+            newsContentEl.innerHTML = '<p>Не вдалося завантажити новини.</p>';
         }
     }
 
@@ -162,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- ОБРОБНИКИ ПОДІЙ (ЗМІНЕНО ТЕКСТ ОЗВУЧКИ) ---
+    // --- ОБРОБНИКИ ПОДІЙ ---
     weatherSoundToggle.addEventListener('click', () => {
         weatherSoundEnabled = !weatherSoundEnabled;
         weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
@@ -177,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             weatherNotificationType = 'voice';
             if (weatherSoundEnabled && lastTemperature !== null) {
-                // Текст для озвучення змінено на англійський
                 const textToSpeak = `${lastTemperature} degrees`;
                 speak(textToSpeak);
             }
@@ -197,7 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchWeather();
     updateTime();
     fetchAlerts();
+    fetchNews(); // Перший запуск новин
     setInterval(fetchWeather, 60 * 1000);
     setInterval(updateTime, 1000);
     setInterval(fetchAlerts, 10 * 1000);
+    setInterval(fetchNews, 15 * 60 * 1000); // Оновлювати новини кожні 15 хвилин
 });
