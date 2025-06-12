@@ -188,3 +188,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTime, 1000);
     setInterval(fetchAlerts, 10 * 1000);
 });
+
+// --- Тестова кнопка для перевірки голосу ---
+const testVoiceBtn = document.getElementById('test-voice-btn');
+testVoiceBtn.addEventListener('click', () => {
+    // Імітуємо зміну температури, озвучуючи поточне значення
+    const currentTempText = document.getElementById('temperature').textContent;
+    const temp = parseInt(currentTempText, 10);
+
+    if (!isNaN(temp)) {
+        const textToSpeak = `${temp} градусів`;
+        console.log(`Тестуємо озвучення: "${textToSpeak}"`);
+        speak(textToSpeak); // Викликаємо нашу існуючу функцію озвучення
+    } else {
+        console.log("Температура ще не завантажена для тесту.");
+    }
+});
