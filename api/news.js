@@ -1,6 +1,8 @@
-const fetch = require('node-fetch');
+const Parser = require('rss-parser');
+const parser = new Parser();
 
 module.exports = async (req, res) => {
+  // CORS Заголовки для сумісності з браузерами
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -9,22 +11,23 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
+  // Пряме посилання на RSS-потік
   const rssUrl = 'https://www.ukrinform.ua/rss/tag-kiyiv';
-  const converterUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-
+  
   try {
-    const apiResponse = await fetch(converterUrl);
-    if (!apiResponse.ok) {
-      throw new Error(`RSS-to-JSON service responded with status: ${apiResponse.status}`);
-    }
-    const data = await apiResponse.json();
+    // Використовуємо rss-parser для отримання та перетворення RSS
+    let feed = await parser.parseURL(rssUrl);
 
-    if (data.items && data.items.length > 5) {
-        data.items = data.items.slice(0, 5);
+    // Обрізаємо до 5 новин, якщо їх більше
+    if (feed.items && feed.items.length > 5) {
+        feed.items = feed.items.slice(0, 5);
     }
-    res.status(200).json(data);
+    
+    // Надсилаємо успішну відповідь
+    res.status(200).json(feed);
+
   } catch (error) {
-    console.error('RSS Fetch Error:', error);
-    res.status(500).json({ message: 'Failed to fetch data from RSS feed' });
+    console.error('RSS Parser Error:', error);
+    res.status(500).json({ message: 'Failed to parse RSS feed' });
   }
 };
