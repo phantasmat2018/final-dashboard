@@ -18,63 +18,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- АУДІО ---
     const sounds = {
-        // Ми більше не використовуємо tempChange, але залишимо для структури
-        // tempChange: new Audio('sounds/temp_change.mp3'),
         alertStart: new Audio('sounds/alert_start.mp3'),
         alertEnd: new Audio('sounds/alert_end.mp3')
     };
     
     // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ ---
     let ukrainianVoice = null;
-    // Функція для завантаження голосів. Вони завантажуються асинхронно.
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
-        // Шукаємо жіночий голос з українською мовою
-        ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA' && voice.name.includes('Female'));
-        // Якщо не знайшли жіночий, беремо будь-який український
-        if (!ukrainianVoice) {
-            ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA');
-        }
+        ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA' && voice.name.includes('Female')) || voices.find(voice => voice.lang === 'uk-UA');
     }
-    // Завантажуємо голоси одразу
     loadVoices();
-    // І додаємо обробник події, якщо голоси завантажаться пізніше
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
     }
-
 
     // --- API ---
     const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=50.462722&longitude=30.491602&current_weather=true';
     const alertsApiUrl = '/api/alerts'; 
 
     //============================================
-    // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ
+    // ФУНКЦІЯ ОЗВУЧЕННЯ
     //============================================
-
-    // НОВА ФУНКЦІЯ ОЗВУЧЕННЯ
     function speak(text) {
         if (!weatherSoundEnabled || !window.speechSynthesis) return;
-
-        // Зупиняємо попередні вимови, якщо вони є
         window.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'uk-UA';
-        
-        // Якщо ми знайшли український голос, використовуємо його
         if (ukrainianVoice) {
             utterance.voice = ukrainianVoice;
         }
-        
-        utterance.rate = 1; // Швидкість мови
-        utterance.pitch = 1; // Висота голосу
-
+        utterance.rate = 1;
+        utterance.pitch = 1;
         window.speechSynthesis.speak(utterance);
     }
 
     //============================================
-    // БЛОК ПОГОДИ (ОНОВЛЕНО)
+    // БЛОК ПОГОДИ
     //============================================
     async function fetchWeather() {
         try {
@@ -85,11 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             temperatureEl.textContent = currentTemp;
             
-            // Перевіряємо, чи змінилася температура
             if (lastTemperature !== null && lastTemperature !== currentTemp) {
-                // Створюємо текст для озвучення
                 const textToSpeak = `${currentTemp} градусів`;
-                // Викликаємо функцію озвучення
                 speak(textToSpeak);
             }
             lastTemperature = currentTemp;
@@ -100,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //============================================
-    // ІНШІ БЛОКИ (без змін)
+    // БЛОК ЧАСУ
     //============================================
     function updateTime() {
         const now = new Date();
@@ -108,10 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const optionsWeekday = { weekday: 'long' };
         timeEl.textContent = now.toLocaleTimeString('uk-UA');
         dateEl.textContent = now.toLocaleDateString('uk-UA', optionsDate);
-        let weekday = now.toLocaleDateString('uk-UA', optionsWeekday);
-        weekdayEl.textContent = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+        let weekday = now.toLocaleDateString('uk-UA', { weekday: 'long' });
+        if (weekday) {
+            weekdayEl.textContent = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+        }
     }
 
+    //============================================
+    // БЛОК ТРИВОГ
+    //============================================
     async function fetchAlerts() {
         try {
             const response = await fetch(alertsApiUrl);
@@ -120,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const allAlerts = data.alerts;
 
+            // Статус по Києву
             const kyivAlertNow = allAlerts.some(alert => alert.location_title === 'м. Київ');
             if (kyivAlertNow) {
                 kyivStatusEl.textContent = 'м. Київ: ПОВІТРЯНА ТРИВОГА';
@@ -136,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (alertSoundEnabled) sounds.alertEnd.play();
             }
 
+            // Нижній блок з іншими тривогами
             const otherRegionsAlerts = allAlerts.filter(alert => alert.location_title !== 'м. Київ');
             footerAlertList.innerHTML = ''; 
 
@@ -167,7 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- ОБРОБНИКИ ПОДІЙ ---
+    //============================================
+    // ОБРОБНИКИ ПОДІЙ
+    //============================================
     weatherSoundToggle.addEventListener('click', () => {
         weatherSoundEnabled = !weatherSoundEnabled;
         weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
@@ -180,27 +166,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('dark-theme', themeToggle.checked);
     });
 
-    // --- ПЕРШИЙ ЗАПУСК ТА ІНТЕРВАЛИ ---
+    //============================================
+    // ПЕРШИЙ ЗАПУСК ТА ІНТЕРВАЛИ
+    //============================================
     fetchWeather();
     updateTime();
     fetchAlerts();
     setInterval(fetchWeather, 60 * 1000);
     setInterval(updateTime, 1000);
     setInterval(fetchAlerts, 10 * 1000);
-});
 
-// --- Тестова кнопка для перевірки голосу ---
-const testVoiceBtn = document.getElementById('test-voice-btn');
-testVoiceBtn.addEventListener('click', () => {
-    // Імітуємо зміну температури, озвучуючи поточне значення
-    const currentTempText = document.getElementById('temperature').textContent;
-    const temp = parseInt(currentTempText, 10);
-
-    if (!isNaN(temp)) {
-        const textToSpeak = `${temp} градусів`;
-        console.log(`Тестуємо озвучення: "${textToSpeak}"`);
-        speak(textToSpeak); // Викликаємо нашу існуючу функцію озвучення
-    } else {
-        console.log("Температура ще не завантажена для тесту.");
+    // --- ДОДАНО ЛОГІКУ ДЛЯ ТЕСТОВОЇ КНОПКИ ---
+    const testVoiceBtn = document.getElementById('test-voice-btn');
+    if (testVoiceBtn) {
+        testVoiceBtn.addEventListener('click', () => {
+            const currentTempText = document.getElementById('temperature').textContent;
+            const temp = parseInt(currentTempText, 10);
+            
+            if (!isNaN(temp)) {
+                const textToSpeak = `${temp} градусів`;
+                console.log(`Тестуємо озвучення: "${textToSpeak}"`);
+                speak(textToSpeak);
+            } else {
+                console.log("Температура ще не завантажена для тесту.");
+            }
+        });
     }
 });
