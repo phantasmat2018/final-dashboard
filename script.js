@@ -27,20 +27,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const data = await response.json();
-            newsContainer.innerHTML = ''; // Очищуємо
+            newsContainer.innerHTML = ''; 
 
-            // Новий формат даних: data.items
             if (data.items && data.items.length > 0) {
                 data.items.forEach(item => {
                     const link = document.createElement('a');
                     link.className = 'news-item';
-                    link.href = item.link; // Посилання на новину
+                    link.href = item.link;
                     link.target = '_blank';
 
                     const title = document.createElement('h5');
-                    title.textContent = item.title; // Заголовок новини
+                    title.textContent = item.title;
 
-                    // Створюємо опис з датою публікації. Поле тепер називається isoDate
                     const source = document.createElement('p');
                     const pubDate = new Date(item.isoDate);
                     source.textContent = pubDate.toLocaleString('uk-UA');
