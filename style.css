@@ -133,9 +133,10 @@ body.dark-theme .tile-map { background-color: rgba(0, 0, 0, 0.2); }
     margin-top: 10px;
 }
 
+/* ВИПРАВЛЕНО: Повертаємо фіксовану висоту для стабільності */
 .map-container {
-    flex-grow: 1; /* Дозволяємо карті заповнити простір */
-    min-height: 450px; /* Мінімальна висота, щоб плитка не була занадто малою */
+    height: 550px; /* Можете погратися з цим значенням для ідеального балансу */
+    width: 100%;
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 20px;
