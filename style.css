@@ -59,8 +59,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     width: 100%;
     max-width: 1600px;
     margin: 0 auto;
-    /* Дозволяємо колонкам мати власну висоту, вирівнюючи їх по верху */
-    align-items: flex-start;
+    /* align-items: stretch; є значенням за замовчуванням, воно змусить колонки мати однакову висоту */
 }
 
 .left-column {
@@ -86,17 +85,14 @@ input:checked + .slider:before { transform: translateX(20px); }
     flex-direction: column;
 }
 
-.tile-weather { 
-    background-color: rgba(251, 194, 235, 0.2); 
-    min-height: 300px; /* Мінімальна висота для балансу */
+/* Робимо так, щоб плитки в лівій колонці рівномірно заповнили висоту */
+.left-column > .tile {
+    flex-grow: 1;
 }
-.tile-time { 
-    background-color: rgba(170, 193, 238, 0.2);
-    min-height: 300px; /* Мінімальна висота для балансу */
-}
-.tile-map { 
-    background-color: rgba(255, 255, 255, 0.15); 
-}
+
+.tile-weather { background-color: rgba(251, 194, 235, 0.2); }
+.tile-time { background-color: rgba(170, 193, 238, 0.2); }
+.tile-map { background-color: rgba(255, 255, 255, 0.15); }
 
 body.dark-theme .tile { --tile-border-color: rgba(255, 255, 255, 0.1); }
 body.dark-theme .tile-weather { background-color: rgba(251, 194, 235, 0.05); }
@@ -138,9 +134,8 @@ body.dark-theme .tile-map { background-color: rgba(0, 0, 0, 0.2); }
 }
 
 .map-container {
-    /* Висота карти буде адаптивною */
-    aspect-ratio: 16 / 10;
-    width: 100%;
+    flex-grow: 1; /* Дозволяємо карті заповнити простір */
+    min-height: 450px; /* Мінімальна висота, щоб плитка не була занадто малою */
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 20px;
@@ -208,7 +203,6 @@ body.dark-theme .sound-toggle:hover {
     }
     .main-container {
         flex-direction: column;
-        height: auto;
     }
     .right-column, .left-column {
         flex: 1;
