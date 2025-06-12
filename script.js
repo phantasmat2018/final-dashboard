@@ -25,13 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
         alertEnd: new Audio('sounds/alert_end.mp3')
     };
     
-    // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ ---
-    let ukrainianVoice = null;
+    // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ (ЗМІНЕНО НА АНГЛІЙСЬКУ) ---
+    let englishVoice = null;
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
-        ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA' && voice.name.includes('Female'));
-        if (!ukrainianVoice) {
-            ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA');
+        // Шукаємо жіночий англійський голос
+        englishVoice = voices.find(voice => voice.lang.startsWith('en-') && voice.name.includes('Female'));
+        // Якщо не знайдено, шукаємо будь-який англійський голос за замовчуванням
+        if (!englishVoice) {
+            englishVoice = voices.find(voice => voice.lang.startsWith('en-'));
         }
     }
     loadVoices();
@@ -45,19 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertsApiUrl = '/api/alerts'; 
 
     //============================================
-    // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ
+    // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ (ЗМІНЕНО НА АНГЛІЙСЬКУ)
     //============================================
     function speak(text) {
-        // Функція speak тепер перевіряє лише weatherSoundEnabled.
-        // Це дозволяє викликати її для негайного відгуку.
         if (!weatherSoundEnabled || !window.speechSynthesis) return;
 
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'uk-UA';
+        utterance.lang = 'en-US'; // Встановлено англійську мову
         
-        if (ukrainianVoice) {
-            utterance.voice = ukrainianVoice;
+        if (englishVoice) {
+            utterance.voice = englishVoice; // Використовуємо знайдений англійський голос
         }
         
         utterance.rate = 1;
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //============================================
-    // БЛОК ПОГОДИ
+    // БЛОК ПОГОДИ (ЗМІНЕНО ТЕКСТ ОЗВУЧКИ)
     //============================================
     async function fetchWeather() {
         try {
@@ -80,7 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (lastTemperature !== null && lastTemperature !== currentTemp && weatherSoundEnabled) {
                 if (weatherNotificationType === 'voice') {
-                    const textToSpeak = `${currentTemp} градусів`;
+                    // Текст для озвучення змінено на англійський
+                    const textToSpeak = `${currentTemp} degrees`;
                     speak(textToSpeak);
                 } else {
                     sounds.tempChange.play();
@@ -161,27 +162,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- ОБРОБНИКИ ПОДІЙ ---
+    // --- ОБРОБНИКИ ПОДІЙ (ЗМІНЕНО ТЕКСТ ОЗВУЧКИ) ---
     weatherSoundToggle.addEventListener('click', () => {
         weatherSoundEnabled = !weatherSoundEnabled;
         weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
     });
 
-    // --> ОСЬ ТУТ ОСНОВНІ ЗМІНИ <--
     weatherNotificationTypeToggle.addEventListener('change', () => {
         if (weatherNotificationTypeToggle.checked) {
-            // Перемкнули на режим "звук" (🎵)
             weatherNotificationType = 'sound';
-            // Негайно відтворюємо звук, якщо звук загалом увімкнено
             if (weatherSoundEnabled) {
                 sounds.tempChange.play();
             }
         } else {
-            // Перемкнули на режим "голос" (🗣️)
             weatherNotificationType = 'voice';
-            // Негайно озвучуємо поточну температуру, якщо є дані і звук увімкнено
             if (weatherSoundEnabled && lastTemperature !== null) {
-                const textToSpeak = `${lastTemperature} градусів`;
+                // Текст для озвучення змінено на англійський
+                const textToSpeak = `${lastTemperature} degrees`;
                 speak(textToSpeak);
             }
         }
