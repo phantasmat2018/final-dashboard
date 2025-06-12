@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const weatherSoundToggle = document.getElementById('weather-sound-toggle');
     const alertSoundToggle = document.getElementById('alert-sound-toggle');
     const kyivStatusEl = document.getElementById('kyiv-status');
+    // НОВИЙ ЕЛЕМЕНТ
+    const footerAlertList = document.getElementById('footer-alert-list');
 
     // Змінні стану
     let lastTemperature = null;
@@ -24,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // API
     const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=50.462722&longitude=30.491602&current_weather=true';
-    const alertsApiUrl = '/api/alerts'; // Відносне посилання для Vercel
+    const alertsApiUrl = '/api/alerts'; 
 
     // Функція для отримання погоди
     async function fetchWeather() {
@@ -55,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         weekdayEl.textContent = weekday.charAt(0).toUpperCase() + weekday.slice(1);
     }
 
-    // Функція для отримання статусу тривог
+    // ОНОВЛЕНА ФУНКЦІЯ для отримання статусу тривог
     async function fetchAlerts() {
         try {
             const response = await fetch(alertsApiUrl);
@@ -63,8 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const data = await response.json();
             const allAlerts = data.alerts;
-            const kyivAlertNow = allAlerts.some(alert => alert.location_title === 'м. Київ');
 
+            // --- Оновлення статусу по Києву (без змін) ---
+            const kyivAlertNow = allAlerts.some(alert => alert.location_title === 'м. Київ');
             if (kyivAlertNow) {
                 kyivStatusEl.textContent = 'м. Київ: ПОВІТРЯНА ТРИВОГА';
                 kyivStatusEl.className = 'alert-status status-active';
@@ -72,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 kyivStatusEl.textContent = 'м. Київ: Немає тривоги';
                 kyivStatusEl.className = 'alert-status status-inactive';
             }
-            
             if (kyivAlertNow && !isKyivAlertActive) {
                 isKyivAlertActive = true;
                 if (alertSoundEnabled) sounds.alertStart.play();
@@ -80,10 +82,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 isKyivAlertActive = false;
                 if (alertSoundEnabled) sounds.alertEnd.play();
             }
+
+            // --- НОВА ЛОГІКА: Оновлення нижнього блоку тривог ---
+            const otherRegions = allAlerts.filter(alert => alert.location_title !== 'м. Київ');
+            footerAlertList.innerHTML = ''; // Очищуємо попередній список
+
+            if (otherRegions.length > 0) {
+                const title = document.createElement('h4');
+                title.textContent = 'Тривога в інших областях:';
+                footerAlertList.appendChild(title);
+
+                otherRegions.forEach(alert => {
+                    const badge = document.createElement('div');
+                    badge.className = 'alert-badge';
+                    badge.textContent = alert.location_title;
+                    footerAlertList.appendChild(badge);
+                });
+                footerAlertList.style.display = 'flex'; // Показуємо блок, якщо є тривоги
+            } else {
+                footerAlertList.style.display = 'none'; // Ховаємо блок, якщо тривог немає
+            }
+
         } catch (error) {
             console.error("Failed to load alert status:", error);
             kyivStatusEl.textContent = 'Помилка завантаження';
             kyivStatusEl.className = 'alert-status';
+            footerAlertList.innerHTML = ''; // Очищуємо також при помилці
+            footerAlertList.style.display = 'none';
         }
     }
     
