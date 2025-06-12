@@ -6,6 +6,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/news.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "index.html",
       "use": "@vercel/static"
     },
@@ -20,6 +24,10 @@
     {
       "src": "sounds/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.png",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -28,11 +36,15 @@
       "dest": "/api/alerts.js"
     },
     {
+      "src": "/api/news",
+      "dest": "/api/news.js"
+    },
+    {
       "src": "/sounds/(.*)",
       "dest": "/sounds/$1"
     },
     {
-      "src": "/(.*\\.(css|js))",
+      "src": "/(.*\\.(css|js|png))",
       "dest": "/$1"
     },
     {
