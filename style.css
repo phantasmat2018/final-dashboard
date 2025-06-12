@@ -82,7 +82,7 @@ body.dark-theme .tile-time { background-color: rgba(170, 193, 238, 0.05); }
 body.dark-theme .tile-map { background-color: rgba(0, 0, 0, 0.2); }
 body.dark-theme .tile-news { background-color: rgba(144, 238, 144, 0.05); }
 
-.tile-title { margin: 0; font-size: 1.1rem; font-weight: 700; opacity: 0.7; }
+.tile-title { margin: 0 0 20px 0; font-size: 1.1rem; font-weight: 700; opacity: 0.7; }
 .tile .content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; overflow: hidden; }
 
 /* --- Вміст плиток --- */
