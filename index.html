@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інформаційна панель</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="theme-switcher-wrapper">
+            ☀️
+            <label class="theme-switcher">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+            🌙
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="left-column">
+            <div class="tile tile-weather">
+                <h3 class="tile-title">Погода в Києві</h3>
+                <div class="content">
+                    <div class="weather-temp">
+                        <span id="temperature">--</span>°C
+                    </div>
+                </div>
+                <div class="tile-footer">
+                    <button id="weather-sound-toggle" class="sound-toggle">🔔 Звук: Увімкнено</button>
+                </div>
+            </div>
+            <div class="tile tile-time">
+                <h3 class="tile-title">Поточний час</h3>
+                <div class="content">
+                    <div id="time" class="time-display">--:--:--</div>
+                    <div id="date" class="date-display">--.--.----</div>
+                    <div id="weekday" class="weekday-display">-------</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="tile tile-map">
+                <h3 class="tile-title">Мапа Повітряних Тривог</h3>
+                <div class="map-container">
+                    <iframe src="https://alerts.in.ua/" frameborder="0"></iframe>
+                </div>
+                <div class="tile-footer alert-footer">
+                     <div id="kyiv-status" class="alert-status">
+                        Завантаження статусу...
+                    </div>
+                    <button id="alert-sound-toggle" class="sound-toggle">🔔 Тривога: Увімкнено</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
