@@ -97,6 +97,7 @@ body.dark-theme .tile-news { background-color: rgba(144, 238, 144, 0.05); } /* Ð
     display: flex;
     flex-direction: column;
     gap: 15px;
+	justify-content: flex-start;
 }
 .news-item {
     display: block;
