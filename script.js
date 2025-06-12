@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const optionsWeekday = { weekday: 'long' };
         timeEl.textContent = now.toLocaleTimeString('uk-UA');
         dateEl.textContent = now.toLocaleDateString('uk-UA', optionsDate);
-        let weekday = now.toLocaleDateString('uk-UA', { weekday: 'long' });
+        let weekday = now.toLocaleDateString('uk-UA', optionsWeekday);
         weekdayEl.textContent = weekday.charAt(0).toUpperCase() + weekday.slice(1);
     }
 
