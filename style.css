@@ -41,10 +41,10 @@ input:checked + .slider:before { transform: translateX(20px); }
 /* --- ОСНОВНИЙ КОНТЕЙНЕР (ЗМІНЕНО НА 3 КОЛОНКИ) --- */
 .main-container {
     display: grid;
-    grid-template-columns: 1fr 2fr 1.5fr; /* Змінено */
+    grid-template-columns: 1fr 2.5fr 1fr; /* ЗМІНЕНО: Мапа стала ширшою, новини - вужчими */
     grid-template-rows: 1fr 1fr;
     gap: 20px;
-    height: 80vh; /* Задаємо висоту для кращого скролу */
+    height: 80vh;
 }
 
 /* --- Стилі плиток --- */
