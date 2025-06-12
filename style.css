@@ -52,14 +52,18 @@ body.dark-theme {
 input:checked + .slider { background-color: #8ec5fc; }
 input:checked + .slider:before { transform: translateX(20px); }
 
+/* --- НОВА ОБГОРТКА СТОРІНКИ --- */
+.page-wrapper {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
 /* --- Основний контейнер та колонки --- */
 .main-container {
     display: flex;
     gap: 20px;
-    width: 100%;
-    max-width: 1600px;
-    margin: 0 auto;
-    /* align-items: stretch; є значенням за замовчуванням, воно змусить колонки мати однакову висоту */
+    align-items: flex-start;
 }
 
 .left-column {
@@ -85,20 +89,22 @@ input:checked + .slider:before { transform: translateX(20px); }
     flex-direction: column;
 }
 
-/* Робимо так, щоб плитки в лівій колонці рівномірно заповнили висоту */
-.left-column > .tile {
-    flex-grow: 1;
+.tile-weather { 
+    background-color: rgba(251, 194, 235, 0.2); 
+    min-height: 300px;
 }
-
-.tile-weather { background-color: rgba(251, 194, 235, 0.2); }
-.tile-time { background-color: rgba(170, 193, 238, 0.2); }
-.tile-map { background-color: rgba(255, 255, 255, 0.15); }
+.tile-time { 
+    background-color: rgba(170, 193, 238, 0.2);
+    min-height: 300px;
+}
+.tile-map { 
+    background-color: rgba(255, 255, 255, 0.15); 
+}
 
 body.dark-theme .tile { --tile-border-color: rgba(255, 255, 255, 0.1); }
 body.dark-theme .tile-weather { background-color: rgba(251, 194, 235, 0.05); }
 body.dark-theme .tile-time { background-color: rgba(170, 193, 238, 0.05); }
 body.dark-theme .tile-map { background-color: rgba(0, 0, 0, 0.2); }
-
 
 .tile-title {
     margin: 0 0 20px 0;
@@ -116,148 +122,46 @@ body.dark-theme .tile-map { background-color: rgba(0, 0, 0, 0.2); }
 }
 
 /* --- Вміст плиток --- */
-.weather-temp {
-    font-size: 8rem;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.time-display {
-    font-size: 6rem;
-    font-weight: 800;
-    line-height: 1;
-}
-.date-display, .weekday-display {
-    font-size: 1.5rem;
-    opacity: 0.7;
-    margin-top: 10px;
-}
-
-/* ВИПРАВЛЕНО: Повертаємо фіксовану висоту для стабільності */
-.map-container {
-    height: 550px; /* Можете погратися з цим значенням для ідеального балансу */
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 20px;
-}
-.map-container iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
+.weather-temp { font-size: 8rem; font-weight: 800; line-height: 1; }
+.time-display { font-size: 6rem; font-weight: 800; line-height: 1; }
+.date-display, .weekday-display { font-size: 1.5rem; opacity: 0.7; margin-top: 10px; }
+.map-container { aspect-ratio: 16 / 10; width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.map-container iframe { width: 100%; height: 100%; border: none; }
 
 /* --- Футер та кнопки --- */
-.tile-footer {
-    text-align: center;
-    padding-top: 20px;
-}
-
-.alert-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    padding-top: 0;
-}
-
-.alert-status {
-    flex-grow: 1;
-    padding: 10px;
-    border-radius: 12px;
-    text-align: center;
-    font-weight: 700;
-    color: white;
-    transition: background-color 0.5s ease;
-}
-
+.tile-footer { text-align: center; padding-top: 20px; }
+.alert-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding-top: 0; }
+.alert-status { flex-grow: 1; padding: 10px; border-radius: 12px; text-align: center; font-weight: 700; color: white; transition: background-color 0.5s ease; }
 .alert-status.status-active { background-color: #d9534f; }
 .alert-status.status-inactive { background-color: #5cb85c; }
+.sound-toggle { background-color: rgba(255, 255, 255, 0.2); border: 1px solid var(--tile-border-color); color: inherit; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: 'Manrope', sans-serif; font-size: 0.9rem; transition: all 0.2s; flex-shrink: 0; }
+.sound-toggle:hover { background-color: rgba(255, 255, 255, 0.4); }
+body.dark-theme .sound-toggle { background-color: rgba(0, 0, 0, 0.2); }
+body.dark-theme .sound-toggle:hover { background-color: rgba(0, 0, 0, 0.4); }
 
-
-.sound-toggle {
-    background-color: rgba(255, 255, 255, 0.2);
-    border: 1px solid var(--tile-border-color);
-    color: inherit;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-.sound-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.4);
-}
-body.dark-theme .sound-toggle {
-    background-color: rgba(0, 0, 0, 0.2);
-}
-body.dark-theme .sound-toggle:hover {
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-/* --- Адаптивність --- */
-@media (max-width: 1024px) {
-    body {
-        padding: 10px;
-    }
-    .main-container {
-        flex-direction: column;
-    }
-    .right-column, .left-column {
-        flex: 1;
-    }
-}
-@media (max-width: 768px) {
-    .weather-temp { font-size: 6rem; }
-    .time-display { font-size: 4.5rem; }
-}
-
-/* --- Стилі для нижнього блоку тривог --- */
+/* --- Нижній блок тривог --- */
 .other-alerts-footer {
     margin-top: 20px;
     padding: 20px 25px;
-    width: 100%;
-    max-width: 1600px;
-    margin-left: auto;
-    margin-right: auto;
-
-    /* Скляний ефект, як у плиток */
     background-color: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid var(--tile-border-color);
     border-radius: 24px;
     box-shadow: 0 8px 32px 0 var(--shadow-color);
-
-    /* Розташування вмісту */
-    display: flex;
+    display: none; /* Ховаємо початково */
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
 }
 
-body.dark-theme .other-alerts-footer {
-    background-color: rgba(0, 0, 0, 0.2);
-}
+body.dark-theme .other-alerts-footer { background-color: rgba(0, 0, 0, 0.2); }
+.other-alerts-footer h4 { margin: 0; font-size: 1.1rem; font-weight: 700; opacity: 0.7; margin-right: 10px; }
+.alert-badge { background-color: rgba(0, 0, 0, 0.1); padding: 6px 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 500; }
+body.dark-theme .alert-badge { background-color: rgba(255, 255, 255, 0.1); }
 
-.other-alerts-footer h4 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    opacity: 0.7;
-    margin-right: 10px;
-}
-
-.alert-badge {
-    background-color: rgba(0, 0, 0, 0.1);
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-body.dark-theme .alert-badge {
-    background-color: rgba(255, 255, 255, 0.1);
+/* --- Адаптивність --- */
+@media (max-width: 1024px) {
+    body { padding: 10px; }
+    .main-container { flex-direction: column; align-items: stretch; }
 }
