@@ -167,3 +167,25 @@ body.dark-theme .alert-badge { background-color: rgba(255, 255, 255, 0.1); }
         height: auto;
     }
 }
+
+/* --- СТИЛІ ДЛЯ КАСТОМНОГО СКРОЛУ В БЛОЦІ НОВИН --- */
+#news-content::-webkit-scrollbar {
+  width: 6px; /* Робимо скрол тоншим */
+}
+
+/* Доріжка, по якій рухається повзунок */
+#news-content::-webkit-scrollbar-track {
+  background: transparent; /* Робимо фон доріжки прозорим */
+}
+
+/* Повзунок скролу */
+#news-content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3); /* Напівпрозорий білий колір */
+  border-radius: 10px; /* Заокруглюємо повзунок */
+  transition: background-color 0.2s ease; /* Плавна анімація при наведенні */
+}
+
+/* Повзунок скролу при наведенні курсора */
+#news-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5); /* Робимо його трішки яскравішим */
+}
