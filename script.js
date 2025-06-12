@@ -22,11 +22,16 @@ document.addEventListener('DOMContentLoaded', () => {
         alertEnd: new Audio('sounds/alert_end.mp3')
     };
     
-    // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ ---
-    let ukrainianVoice = null;
+    // --- НАЛАШТУВАННЯ СИНТЕЗУ МОВИ (ОНОВЛЕНО ДЛЯ АНГЛІЙСЬКОЇ) ---
+    let englishVoice = null;
     function loadVoices() {
         const voices = window.speechSynthesis.getVoices();
-        ukrainianVoice = voices.find(voice => voice.lang === 'uk-UA' && voice.name.includes('Female')) || voices.find(voice => voice.lang === 'uk-UA');
+        // Шукаємо жіночий голос з англійською мовою (США)
+        englishVoice = voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Female'));
+        // Якщо не знайшли жіночий, беремо будь-який американський англійський
+        if (!englishVoice) {
+            englishVoice = voices.find(voice => voice.lang === 'en-US');
+        }
     }
     loadVoices();
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -38,23 +43,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertsApiUrl = '/api/alerts'; 
 
     //============================================
-    // ФУНКЦІЯ ОЗВУЧЕННЯ
+    // ФУНКЦІЯ ОЗВУЧЕННЯ (ОНОВЛЕНО)
     //============================================
     function speak(text) {
         if (!weatherSoundEnabled || !window.speechSynthesis) return;
         window.speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'uk-UA';
-        if (ukrainianVoice) {
-            utterance.voice = ukrainianVoice;
+        utterance.lang = 'en-US'; // ЗМІНЕНО: Вказуємо англійську мову
+        
+        if (englishVoice) {
+            utterance.voice = englishVoice; // Використовуємо знайдений англійський голос
         }
-        utterance.rate = 1;
+        
+        utterance.rate = 1; 
         utterance.pitch = 1;
+
         window.speechSynthesis.speak(utterance);
     }
 
     //============================================
-    // БЛОК ПОГОДИ
+    // БЛОК ПОГОДИ (ОНОВЛЕНО)
     //============================================
     async function fetchWeather() {
         try {
@@ -66,7 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
             temperatureEl.textContent = currentTemp;
             
             if (lastTemperature !== null && lastTemperature !== currentTemp) {
-                const textToSpeak = `${currentTemp} градусів`;
+                // ЗМІНЕНО: Створюємо текст англійською
+                const textToSpeak = `${currentTemp} degrees`;
                 speak(textToSpeak);
             }
             lastTemperature = currentTemp;
@@ -77,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //============================================
-    // БЛОК ЧАСУ
+    // ІНШІ БЛОКИ (без змін)
     //============================================
     function updateTime() {
         const now = new Date();
@@ -91,9 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    //============================================
-    // БЛОК ТРИВОГ
-    //============================================
     async function fetchAlerts() {
         try {
             const response = await fetch(alertsApiUrl);
@@ -102,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const allAlerts = data.alerts;
 
-            // Статус по Києву
             const kyivAlertNow = allAlerts.some(alert => alert.location_title === 'м. Київ');
             if (kyivAlertNow) {
                 kyivStatusEl.textContent = 'м. Київ: ПОВІТРЯНА ТРИВОГА';
@@ -119,18 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (alertSoundEnabled) sounds.alertEnd.play();
             }
 
-            // Нижній блок з іншими тривогами
             const otherRegionsAlerts = allAlerts.filter(alert => alert.location_title !== 'м. Київ');
             footerAlertList.innerHTML = ''; 
 
             if (otherRegionsAlerts.length > 0) {
                 const locationNames = otherRegionsAlerts.map(alert => alert.location_title);
                 const uniqueLocationNames = [...new Set(locationNames)];
-
                 const title = document.createElement('h4');
                 title.textContent = 'Тривога в інших областях:';
                 footerAlertList.appendChild(title);
-
                 uniqueLocationNames.forEach(locationName => {
                     const badge = document.createElement('div');
                     badge.className = 'alert-badge';
@@ -166,6 +169,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('dark-theme', themeToggle.checked);
     });
 
+    // --- Тестова кнопка, якщо вона є в HTML ---
+    const testVoiceBtn = document.getElementById('test-voice-btn');
+    if (testVoiceBtn) {
+        testVoiceBtn.addEventListener('click', () => {
+            const currentTempText = document.getElementById('temperature').textContent;
+            const temp = parseInt(currentTempText, 10);
+            
+            if (!isNaN(temp)) {
+                const textToSpeak = `${temp} degrees`;
+                console.log(`Тестуємо озвучення: "${textToSpeak}"`);
+                speak(textToSpeak);
+            } else {
+                console.log("Температура ще не завантажена для тесту.");
+            }
+        });
+    }
+
     //============================================
     // ПЕРШИЙ ЗАПУСК ТА ІНТЕРВАЛИ
     //============================================
@@ -175,21 +195,4 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchWeather, 60 * 1000);
     setInterval(updateTime, 1000);
     setInterval(fetchAlerts, 10 * 1000);
-
-    // --- ДОДАНО ЛОГІКУ ДЛЯ ТЕСТОВОЇ КНОПКИ ---
-    const testVoiceBtn = document.getElementById('test-voice-btn');
-    if (testVoiceBtn) {
-        testVoiceBtn.addEventListener('click', () => {
-            const currentTempText = document.getElementById('temperature').textContent;
-            const temp = parseInt(currentTempText, 10);
-            
-            if (!isNaN(temp)) {
-                const textToSpeak = `${temp} градусів`;
-                console.log(`Тестуємо озвучення: "${textToSpeak}"`);
-                speak(textToSpeak);
-            } else {
-                console.log("Температура ще не завантажена для тесту.");
-            }
-        });
-    }
 });
