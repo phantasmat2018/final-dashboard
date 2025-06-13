@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newsContentEl = document.getElementById('news-content');
     const refreshNewsBtn = document.getElementById('refresh-news-btn');
 
-    // --- ЗМІННІ СТАНУ ---
+    // --- ЗМІННІ СТАНУ (значення за замовчуванням) ---
     let lastTemperature = null;
     let isKyivAlertActive = false;
     let weatherSoundEnabled = true;
@@ -45,6 +45,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=50.462722&longitude=30.491602&current_weather=true';
     const alertsApiUrl = '/api/alerts'; 
     const newsApiUrl = '/api/news';
+
+    //============================================
+    // ЗБЕРЕЖЕННЯ ТА ЗАВАНТАЖЕННЯ НАЛАШТУВАНЬ (НОВІ ФУНКЦІЇ)
+    //============================================
+    function saveSettings() {
+        const settings = {
+            isDarkTheme: themeToggle.checked,
+            weatherSound: weatherSoundEnabled,
+            alertSound: alertSoundEnabled,
+            weatherNotificationType: weatherNotificationType
+        };
+        localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+        const settings = JSON.parse(localStorage.getItem('dashboardSettings'));
+        if (!settings) return; // Якщо налаштувань немає, виходимо
+
+        // Застосовуємо тему
+        themeToggle.checked = settings.isDarkTheme;
+        document.body.classList.toggle('dark-theme', settings.isDarkTheme);
+
+        // Застосовуємо налаштування звуку погоди
+        weatherSoundEnabled = settings.weatherSound;
+        weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
+
+        // Застосовуємо налаштування звуку тривоги
+        alertSoundEnabled = settings.alertSound;
+        alertSoundToggle.textContent = alertSoundEnabled ? '🔔 Тривога: Увімкнено' : '🔕 Тривога: Вимкнено';
+
+        // Застосовуємо налаштування типу сповіщення про погоду
+        weatherNotificationType = settings.weatherNotificationType;
+        weatherNotificationTypeToggle.checked = (weatherNotificationType === 'sound');
+    }
 
     //============================================
     // ОЗВУЧЕННЯ ТА ІНШІ ФУНКЦІЇ
@@ -198,10 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- ОБРОБНИКИ ПОДІЙ ---
+    // --- ОБРОБНИКИ ПОДІЙ (ДОДАНО ЗБЕРЕЖЕННЯ) ---
     weatherSoundToggle.addEventListener('click', () => {
         weatherSoundEnabled = !weatherSoundEnabled;
         weatherSoundToggle.textContent = weatherSoundEnabled ? '🔔 Звук: Увімкнено' : '🔕 Звук: Вимкнено';
+        saveSettings(); // Зберігаємо
     });
 
     weatherNotificationTypeToggle.addEventListener('change', () => {
@@ -217,20 +252,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 speak(textToSpeak);
             }
         }
+        saveSettings(); // Зберігаємо
     });
 
     alertSoundToggle.addEventListener('click', () => {
         alertSoundEnabled = !alertSoundEnabled;
         alertSoundToggle.textContent = alertSoundEnabled ? '🔔 Тривога: Увімкнено' : '🔕 Тривога: Вимкнено';
+        saveSettings(); // Зберігаємо
     });
     
     themeToggle.addEventListener('change', () => {
         document.body.classList.toggle('dark-theme', themeToggle.checked);
+        saveSettings(); // Зберігаємо
     });
 
     refreshNewsBtn.addEventListener('click', fetchNews);
 
     // --- ПЕРШИЙ ЗАПУСК ТА ІНТЕРВАЛИ ---
+    loadSettings(); // ЗАВАНТАЖУЄМО НАЛАШТУВАННЯ ПРИ СТАРТІ
+    
     fetchWeather();
     updateTime();
     fetchAlerts();
