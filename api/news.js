@@ -1,7 +1,4 @@
 const Parser = require('rss-parser');
-const fetch = require('node-fetch');
-const iconv = require('iconv-lite');
-
 const parser = new Parser();
 
 module.exports = async (req, res) => {
@@ -14,27 +11,18 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const FEED_URL = 'https://kiev.pravda.com/rss/view_news/';
+  // НОВЕ ПОСИЛАННЯ НА RSS-СТРІЧКУ
+  const FEED_URL = 'https://kyiv24.news/feed';
 
   try {
-    // 1. Завантажуємо стрічку як набір байтів (буфер)
-    const response = await fetch(FEED_URL);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch RSS feed: ${response.statusText}`);
-    }
-    const buffer = await response.buffer();
-
-    // 2. Декодуємо буфер з кодування windows-1251 у рядок UTF-8
-    const xmlString = iconv.decode(buffer, 'windows-1251');
-
-    // 3. Парсимо вже декодований рядок
-    const feed = await parser.parseString(xmlString);
+    // Використовуємо простий метод, який добре працює зі стандартними стрічками
+    const feed = await parser.parseURL(FEED_URL);
     
     // Відправляємо клієнту 10 останніх новин
     res.status(200).json({ items: feed.items.slice(0, 10) });
 
   } catch (error) {
-    console.error('RSS feed processing error:', error);
-    res.status(500).json({ message: 'Failed to fetch or process RSS feed' });
+    console.error('RSS feed parsing error:', error);
+    res.status(500).json({ message: 'Failed to fetch or parse RSS feed' });
   }
 };
